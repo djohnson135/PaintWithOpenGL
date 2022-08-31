@@ -20,6 +20,22 @@ color BACKGROUND_COLOR = { 0,0,0 };
 // A function clamping the input values to the lower and higher bounds
 #define CLAMP(in, low, high) ((in) < (low) ? (low) : ((in) > (high) ? (high) : in))
 
+bool CheckMaskPixel(int x, int y) {
+	y = WINDOW_HEIGHT - 1 - y;
+
+	x = CLAMP(x, 0, WINDOW_WIDTH - 1);
+	y = CLAMP(y, 0, WINDOW_HEIGHT - 1);
+	return mask[y][x];
+}
+
+void SetMaskPixel(int x, int y, bool isDrawn) {
+	y = WINDOW_HEIGHT - 1 - y;
+
+	x = CLAMP(x, 0, WINDOW_WIDTH - 1);
+	y = CLAMP(y, 0, WINDOW_HEIGHT - 1);
+
+	mask[y][x] = isDrawn;
+}
 // Set a particular pixel of the frameBuffer to the provided color
 void SetFrameBufferPixel(int x, int y, struct color lc)
 {
@@ -40,8 +56,20 @@ void BrushDraw(int xpos, int ypos) {
 	for (int i = 0; i < STROKE_SIZE; i++) {
 		for (int j = 0; j < STROKE_SIZE; j++) {
 			SetFrameBufferPixel((xpos + STROKE_SIZE/2) - i, (ypos + STROKE_SIZE / 2)-j, BRUSH_COLOR);
+			SetMaskPixel((xpos + STROKE_SIZE / 2) - i, (ypos + STROKE_SIZE / 2) - j,true);
 		}
 	}
+}
+
+void SetBackgroundColor() {
+	for (int x = 0; x < WINDOW_WIDTH; x++) {
+		for (int y = 0; y < WINDOW_HEIGHT; y++) {
+			if (!CheckMaskPixel(x,y)) {
+				SetFrameBufferPixel(x, y, BACKGROUND_COLOR);
+			}			
+		}
+	}
+	//memset(frameBuffer, 0.0f, sizeof(float) * WINDOW_WIDTH * WINDOW_HEIGHT * 3);
 }
 
 void ClearFrameBuffer()
@@ -49,6 +77,9 @@ void ClearFrameBuffer()
 	memset(frameBuffer, 0.0f, sizeof(float) * WINDOW_WIDTH * WINDOW_HEIGHT * 3);
 }
 
+void ClearMask() {
+	memset(mask, false, sizeof(bool) * WINDOW_WIDTH * WINDOW_HEIGHT);
+}
 // Display frameBuffer on screen
 void Display()
 {	
@@ -72,6 +103,14 @@ void MouseCallback(GLFWwindow* lWindow, int button, int action, int mods)
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) 
 	{	
 		std::cout << "Mouse left button is pressed." << std::endl;
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		std::cout << "Mouse right button is pressed " << std::endl;
+		//clear the framebuffer and mask
+		//ClearFrameBuffer();
+		ClearMask();
+		SetBackgroundColor();
+		//set the background to the background color
 	}
 }
 
@@ -117,27 +156,35 @@ void CharacterCallback(GLFWwindow* lWindow, unsigned int key)
 				break;
 			case ')':
 				BACKGROUND_COLOR = DigitToColor(0);
+				SetBackgroundColor();
 				break;
 			case '!':
 				BACKGROUND_COLOR = DigitToColor(1);
+				SetBackgroundColor();
 				break;
 			case '@':
 				BACKGROUND_COLOR = DigitToColor(2);
+				SetBackgroundColor();
 				break;
 			case '#':
 				BACKGROUND_COLOR = DigitToColor(3);
+				SetBackgroundColor();
 				break;
 			case '$':
 				BACKGROUND_COLOR = DigitToColor(4);
+				SetBackgroundColor();
 				break;
 			case '%':
 				BACKGROUND_COLOR = DigitToColor(5);
+				SetBackgroundColor();
 				break;
 			case '^':
 				BACKGROUND_COLOR = DigitToColor(6);
+				SetBackgroundColor();
 				break;
 			case '&':
 				BACKGROUND_COLOR = DigitToColor(7);
+				SetBackgroundColor();
 				break;
 			default:
 				break;
@@ -161,6 +208,7 @@ void Init()
 	glewInit();
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	ClearFrameBuffer();
+	ClearMask();
 }
 
 
