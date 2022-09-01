@@ -4,8 +4,8 @@
 #include <iostream>
 
 
-#define WINDOW_WIDTH 900
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1200
+#define WINDOW_HEIGHT 800
 int STROKE_SIZE = 1;
 
 float frameBuffer[WINDOW_HEIGHT][WINDOW_WIDTH][3];
@@ -19,6 +19,9 @@ color BRUSH_COLOR = { 1,0,0 };
 color BACKGROUND_COLOR = { 0,0,0 };
 // A function clamping the input values to the lower and higher bounds
 #define CLAMP(in, low, high) ((in) < (low) ? (low) : ((in) > (high) ? (high) : in))
+
+enum Brush { square, circle, spray };
+int Brush = square;
 
 bool CheckMaskPixel(int x, int y) {
 	y = WINDOW_HEIGHT - 1 - y;
@@ -52,12 +55,27 @@ void SetFrameBufferPixel(int x, int y, struct color lc)
 
 }
 
-void BrushDraw(int xpos, int ypos) {
+void PaintSquare(int xpos, int ypos) {
 	for (int i = 0; i < STROKE_SIZE; i++) {
 		for (int j = 0; j < STROKE_SIZE; j++) {
-			SetFrameBufferPixel((xpos + STROKE_SIZE/2) - i, (ypos + STROKE_SIZE / 2)-j, BRUSH_COLOR);
-			SetMaskPixel((xpos + STROKE_SIZE / 2) - i, (ypos + STROKE_SIZE / 2) - j,true);
+			SetFrameBufferPixel((xpos + STROKE_SIZE / 2) - i, (ypos + STROKE_SIZE / 2) - j, BRUSH_COLOR);
+			SetMaskPixel((xpos + STROKE_SIZE / 2) - i, (ypos + STROKE_SIZE / 2) - j, true);
 		}
+	}
+}
+
+void Draw(int xpos, int ypos) {
+	switch (Brush){
+		case square:
+			PaintSquare(xpos, ypos);
+			break;
+		case circle:
+			break;
+		case spray:
+			break;
+		default:
+			PaintSquare(xpos, ypos);
+			break;
 	}
 }
 
@@ -92,7 +110,7 @@ void CursorPositionCallback(GLFWwindow* lWindow, double xpos, double ypos)
 	int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 	if (state == GLFW_PRESS)
 	{
-		BrushDraw((int)xpos, (int)ypos);
+		Draw((int)xpos, (int)ypos);
 		std::cout << "Mouse position is: x - " << xpos << ", y - " << ypos << std::endl;
 	}
 }
@@ -185,6 +203,13 @@ void CharacterCallback(GLFWwindow* lWindow, unsigned int key)
 			case '&':
 				BACKGROUND_COLOR = DigitToColor(7);
 				SetBackgroundColor();
+				break;
+			case 'b':
+				//circle shaped brush
+
+				break;
+			case 's':
+				//spray paint brush
 				break;
 			default:
 				break;
