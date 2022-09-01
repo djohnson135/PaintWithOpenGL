@@ -6,7 +6,7 @@
 
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
-int STROKE_SIZE = 1;
+int BRUSH_SIZE = 1;
 
 float frameBuffer[WINDOW_HEIGHT][WINDOW_WIDTH][3];
 bool mask[WINDOW_HEIGHT][WINDOW_WIDTH];
@@ -56,22 +56,39 @@ void SetFrameBufferPixel(int x, int y, struct color lc)
 }
 
 void PaintSquare(int xpos, int ypos) {
-	for (int i = 0; i < STROKE_SIZE; i++) {
-		for (int j = 0; j < STROKE_SIZE; j++) {
-			SetFrameBufferPixel((xpos + STROKE_SIZE / 2) - i, (ypos + STROKE_SIZE / 2) - j, BRUSH_COLOR);
-			SetMaskPixel((xpos + STROKE_SIZE / 2) - i, (ypos + STROKE_SIZE / 2) - j, true);
+	int x = xpos - BRUSH_SIZE;
+	int y = ypos - BRUSH_SIZE;
+
+	int x_upperbound = CLAMP(xpos + BRUSH_SIZE, 0, WINDOW_WIDTH - 1);
+	int y_upperbound = CLAMP(ypos + BRUSH_SIZE, 0, WINDOW_HEIGHT - 1);
+	
+	for (x; x <= x_upperbound; x++) {
+		for (y; y <= y_upperbound; y++) {
+			SetFrameBufferPixel(x, y, BRUSH_COLOR);
+			SetMaskPixel(x,y, true);
 		}
+		y = ypos - BRUSH_SIZE;
 	}
 }
 
-void Draw(int xpos, int ypos) {
+void PaintCircle(int xpos, int ypos) {
+
+}
+
+void PaintSpray(int xpos, int ypos) {
+
+}
+
+void Paint(int xpos, int ypos) {
 	switch (Brush){
 		case square:
 			PaintSquare(xpos, ypos);
 			break;
 		case circle:
+			PaintCircle(xpos, ypos);
 			break;
 		case spray:
+			PaintSpray(xpos, ypos);
 			break;
 		default:
 			PaintSquare(xpos, ypos);
@@ -110,7 +127,7 @@ void CursorPositionCallback(GLFWwindow* lWindow, double xpos, double ypos)
 	int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 	if (state == GLFW_PRESS)
 	{
-		Draw((int)xpos, (int)ypos);
+		Paint((int)xpos, (int)ypos);
 		std::cout << "Mouse position is: x - " << xpos << ", y - " << ypos << std::endl;
 	}
 }
@@ -167,10 +184,10 @@ void CharacterCallback(GLFWwindow* lWindow, unsigned int key)
 	else {
 		switch ((char)key) {
 			case '+':
-				STROKE_SIZE = CLAMP(STROKE_SIZE * 2, 1, 128);
+				BRUSH_SIZE = CLAMP(BRUSH_SIZE * 2, 1, 128);
 				break;
 			case '-':
-				STROKE_SIZE = CLAMP(STROKE_SIZE / 2, 1, 128);
+				BRUSH_SIZE = CLAMP(BRUSH_SIZE / 2, 1, 128);
 				break;
 			case ')':
 				BACKGROUND_COLOR = DigitToColor(0);
@@ -216,7 +233,7 @@ void CharacterCallback(GLFWwindow* lWindow, unsigned int key)
 		}
 	}
 	std::cout << "Key " << (char)key << " is pressed." << std::endl;
-	std::cout << "Stroke Size " << STROKE_SIZE << std::endl;
+	std::cout << "Stroke Size " << BRUSH_SIZE << std::endl;
 }
 
 
