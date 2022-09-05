@@ -20,8 +20,10 @@ color BACKGROUND_COLOR = { 0,0,0 };
 // A function clamping the input values to the lower and higher bounds
 #define CLAMP(in, low, high) ((in) < (low) ? (low) : ((in) > (high) ? (high) : in))
 
-enum Brush { square, circle, spray };
+enum Brush { square, circle };
 int Brush = square;
+bool isSprayPaint = false;
+
 
 bool CheckMaskPixel(int x, int y) {
 	y = WINDOW_HEIGHT - 1 - y;
@@ -55,29 +57,59 @@ void SetFrameBufferPixel(int x, int y, struct color lc)
 
 }
 
+void PaintSpray(int x, int y, double chance) {
+	double rn = rand() % 10000;
+	rn /= 10000.0;
+	if (chance > rn) {
+		SetFrameBufferPixel(x, y, BRUSH_COLOR);
+		SetMaskPixel(x, y, true);
+	}
+}
+
 void PaintSquare(int xpos, int ypos) {
 	int x = xpos - BRUSH_SIZE;
 	int y = ypos - BRUSH_SIZE;
 
 	int x_upperbound = CLAMP(xpos + BRUSH_SIZE, 0, WINDOW_WIDTH - 1);
 	int y_upperbound = CLAMP(ypos + BRUSH_SIZE, 0, WINDOW_HEIGHT - 1);
-	
+
+	double chance = rand() % 100;
+	chance /= 1000.0;
+
 	for (x; x <= x_upperbound; x++) {
 		for (y; y <= y_upperbound; y++) {
-			SetFrameBufferPixel(x, y, BRUSH_COLOR);
-			SetMaskPixel(x,y, true);
+			if (isSprayPaint) {
+				PaintSpray(x, y, chance);
+			}
+			else {
+				SetFrameBufferPixel(x, y, BRUSH_COLOR);
+				SetMaskPixel(x, y, true);
+			}
 		}
 		y = ypos - BRUSH_SIZE;
 	}
 }
 
 void PaintCircle(int xpos, int ypos) {
-
+	double chance = rand() % 100;
+	chance /= 1000.0;
+	for (int x = -BRUSH_SIZE; x <= BRUSH_SIZE; x++) {
+		for (int y = -BRUSH_SIZE; y <= BRUSH_SIZE; y++) {
+			if (x * x + y * y < BRUSH_SIZE * BRUSH_SIZE + BRUSH_SIZE) {
+				if (isSprayPaint) {
+					PaintSpray(xpos + x, ypos + y, chance);
+				}
+				else {
+					SetFrameBufferPixel(xpos + x, ypos + y, BRUSH_COLOR);
+					SetMaskPixel(xpos + x, ypos + y, true);
+				}	
+			}
+		}
+	}
 }
 
-void PaintSpray(int xpos, int ypos) {
 
-}
+
 
 void Paint(int xpos, int ypos) {
 	switch (Brush){
@@ -86,9 +118,6 @@ void Paint(int xpos, int ypos) {
 			break;
 		case circle:
 			PaintCircle(xpos, ypos);
-			break;
-		case spray:
-			PaintSpray(xpos, ypos);
 			break;
 		default:
 			PaintSquare(xpos, ypos);
@@ -104,7 +133,6 @@ void SetBackgroundColor() {
 			}			
 		}
 	}
-	//memset(frameBuffer, 0.0f, sizeof(float) * WINDOW_WIDTH * WINDOW_HEIGHT * 3);
 }
 
 void ClearFrameBuffer()
@@ -141,11 +169,8 @@ void MouseCallback(GLFWwindow* lWindow, int button, int action, int mods)
 	}
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
 		std::cout << "Mouse right button is pressed " << std::endl;
-		//clear the framebuffer and mask
-		//ClearFrameBuffer();
 		ClearMask();
 		SetBackgroundColor();
-		//set the background to the background color
 	}
 }
 
@@ -222,11 +247,10 @@ void CharacterCallback(GLFWwindow* lWindow, unsigned int key)
 				SetBackgroundColor();
 				break;
 			case 'b':
-				//circle shaped brush
-
+				Brush = (Brush == square)? circle : square;
 				break;
 			case 's':
-				//spray paint brush
+				isSprayPaint = !isSprayPaint;
 				break;
 			default:
 				break;
